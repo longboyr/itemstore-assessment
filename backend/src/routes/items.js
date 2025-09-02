@@ -14,19 +14,39 @@ function readData() {
 router.get('/', (req, res, next) => {
   try {
     const data = readData();
-    const { limit, q } = req.query;
+    const { limit = 10, page = 1, q } = req.query;
     let results = data;
 
     if (q) {
-      // Simple substring search (sub‑optimal)
-      results = results.filter(item => item.name.toLowerCase().includes(q.toLowerCase()));
+      const searchTerm = q.toLowerCase();
+      results = results.filter(
+        (item) =>
+          item.name.toLowerCase().includes(searchTerm) ||
+          item.category.toLowerCase().includes(searchTerm) ||
+          item.price.toString().includes(searchTerm)
+      );
     }
 
-    if (limit) {
-      results = results.slice(0, parseInt(limit));
-    }
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = startIndex + limitNum;
 
-    res.json(results);
+    const totalItems = results.length;
+    const totalPages = Math.ceil(totalItems / limitNum);
+    const paginatedResults = results.slice(startIndex, endIndex);
+
+    res.json({
+      items: paginatedResults,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalItems,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
+    });
   } catch (err) {
     next(err);
   }
