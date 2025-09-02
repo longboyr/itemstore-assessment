@@ -1,0 +1,92 @@
+/* Pulse animation for skeleton loading */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Smooth fade-in animation for items */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus styles for better accessibility */
+.search-input:focus {
+  border-color: #007bff !important;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1) !important;
+}
+
+.btn-primary:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+.btn-secondary:focus {
+  outline: 2px solid #6c757d;
+  outline-offset: 2px;
+}
+
+/* Item hover effects */
+.item-card {
+  transition: all 0.2s ease;
+}
+
+.item-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .search-container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  
+  .search-input {
+    width: 100% !important;
+    margin-bottom: 12px;
+  }
+  
+  .pagination-container {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  
+  .pagination-button {
+    width: 100% !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .item-card {
+    border: 2px solid #000 !important;
+  }
+  
+  .search-input {
+    border: 2px solid #000 !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
