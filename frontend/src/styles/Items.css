@@ -23,6 +23,35 @@
   }
 }
 
+/* Hover effects for interactive elements */
+.search-container input:focus,
+.search-container button:hover {
+  transform: translateY(-1px);
+}
+
+.search-container button:active {
+  transform: translateY(0);
+}
+
+.pagination-container button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transform: translateY(-1px);
+}
+
+.pagination-container button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Stats card hover effects */
+.stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.stats-card:active {
+  transform: translateY(-2px);
+}
+
 /* Focus styles for better accessibility */
 .search-input:focus {
   border-color: #007bff !important;

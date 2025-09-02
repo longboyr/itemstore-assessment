@@ -5,7 +5,6 @@ const path = require('path');
 const router = express.Router();
 const DATA_PATH = path.join(__dirname, "../../../data/items.json");
 
-// Cache for stats with timestamp
 let statsCache = {
   data: null,
   lastModified: null,

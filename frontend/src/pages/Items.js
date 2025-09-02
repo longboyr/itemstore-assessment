@@ -42,6 +42,122 @@ const LoadingSkeleton = ({ count = 5 }) => (
   </div>
 );
 
+const StatsCard = ({ title, value, icon, color = "#3b82f6" }) => (
+  <div
+    style={{
+      backgroundColor: "white",
+      borderRadius: "12px",
+      padding: "20px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      border: "1px solid #f0f0f0",
+      textAlign: "center",
+      transition: "transform 0.2s ease, box-shadow 0.2s ease",
+    }}
+    className="stats-card"
+  >
+    <div
+      style={{
+        fontSize: "24px",
+        marginBottom: "8px",
+        color: color,
+      }}
+    >
+      {icon}
+    </div>
+    <div
+      style={{
+        fontSize: "28px",
+        fontWeight: "bold",
+        color: "#1a1a1a",
+        marginBottom: "4px",
+      }}
+    >
+      {value}
+    </div>
+    <div
+      style={{
+        fontSize: "14px",
+        color: "#666",
+        fontWeight: "500",
+      }}
+    >
+      {title}
+    </div>
+  </div>
+);
+
+const StatsDisplay = ({ stats, loading }) => {
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: "16px",
+          marginBottom: "32px",
+        }}
+      >
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            style={{
+              backgroundColor: "#fafafa",
+              borderRadius: "12px",
+              padding: "20px",
+              height: "120px",
+              animation: "pulse 1.5s ease-in-out infinite alternate",
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (!stats) return null;
+
+  const topCategory = stats.categories
+    ? Object.entries(stats.categories).sort(([,a], [,b]) => b - a)[0]
+    : null;
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+        gap: "16px",
+        marginBottom: "32px",
+      }}
+    >
+      <StatsCard
+        title="Total Items"
+        value={stats.total?.toLocaleString() || "0"}
+        icon="📦"
+        color="#3b82f6"
+      />
+      <StatsCard
+        title="Average Price"
+        value={`$${stats.averagePrice?.toFixed(2) || "0.00"}`}
+        icon="💰"
+        color="#10b981"
+      />
+      <StatsCard
+        title="Price Range"
+        value={`$${(stats.priceRange?.min || 0).toLocaleString()} - $${(stats.priceRange?.max || 0).toLocaleString()}`}
+        icon="📊"
+        color="#f59e0b"
+      />
+      {topCategory && (
+        <StatsCard
+          title="Top Category"
+          value={`${topCategory[0]} (${topCategory[1]})`}
+          icon="🏆"
+          color="#8b5cf6"
+        />
+      )}
+    </div>
+  );
+};
+
 function Items() {
   const [items, setItems] = useState([]);
   const [pagination, setPagination] = useState({});
@@ -49,6 +165,25 @@ function Items() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  const fetchStats = async () => {
+    setStatsLoading(true);
+    try {
+      const res = await fetch('/api/stats');
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      const statsData = await res.json();
+      setStats(statsData);
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+      setStats(null);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   const fetchItems = async (page = 1, limit = 10, search = '') => {
     setLoading(true);
@@ -80,6 +215,7 @@ function Items() {
   };
 
   useEffect(() => {
+    fetchStats();
     fetchItems(currentPage, 10, searchTerm);
   }, [currentPage, searchTerm]);
 
@@ -142,6 +278,8 @@ function Items() {
           Browse and search through our collection
         </p>
       </div>
+
+      <StatsDisplay stats={stats} loading={statsLoading} />
 
       <form onSubmit={handleSearch} role="search" aria-label="Search items">
         <div 
@@ -351,7 +489,7 @@ function Items() {
                           color: "#28a745",
                         }}
                       >
-                        ${item.price}
+                        ${item.price.toLocaleString()}
                       </div>
                     </div>
                   </Link>
