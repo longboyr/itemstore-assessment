@@ -1,22 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { useData } from "../state/DataContext";
+import { Virtuoso } from "react-virtuoso";
 import { Link } from "react-router-dom";
 
 function Items() {
-  const { items, pagination, loading, fetchItems } = useData();
+  const [items, setItems] = useState([]);
+  const [pagination, setPagination] = useState({});
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
+  const fetchItems = async (page = 1, limit = 10, search = '') => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      if (search) {
+        params.append('q', search);
+      }
+      
+      const res = await fetch(`/api/items?${params}`);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
+      const json = await res.json();
+      
+      setItems(Array.isArray(json.items) ? json.items : []);
+      setPagination(json.pagination || {});
+    } catch (error) {
+      console.error('Failed to fetch items:', error);
+      setItems([]);
+      setPagination({});
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const abortController = new AbortController();
-
-    fetchItems(abortController.signal, currentPage, 10, searchTerm);
-
-    return () => {
-      abortController.abort();
-    };
-  }, [fetchItems, currentPage, searchTerm]);
+    fetchItems(currentPage, 10, searchTerm);
+  }, [currentPage, searchTerm]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -28,87 +53,102 @@ function Items() {
     setCurrentPage(newPage);
   };
 
-  if (loading) return <p>Loading...</p>;
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
   return (
-    <div>
-      <form onSubmit={handleSearch} style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          placeholder="Search items..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          style={{
-            padding: "8px",
-            marginRight: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            width: "300px",
-          }}
-        />
-        <button
-          type="submit"
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          Search
-        </button>
-        {searchTerm && (
-          <button
-            type="button"
-            onClick={() => {
-              setSearchTerm("");
-              setSearchInput("");
-              setCurrentPage(1);
+    <div style={{ padding: "20px" }}>
+      <form onSubmit={handleSearch}>
+        <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+          <input
+            type="text"
+            placeholder="Search items..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            style={{
+              padding: "8px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              width: "300px",
             }}
+          />
+          <button
+            type="submit"
             style={{
               padding: "8px 16px",
-              backgroundColor: "#6c757d",
+              backgroundColor: "#007bff",
               color: "white",
               border: "none",
               borderRadius: "4px",
               cursor: "pointer",
-              marginLeft: "10px",
             }}
           >
-            Clear
+            Search
           </button>
-        )}
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                setSearchInput("");
+                setCurrentPage(1);
+              }}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#6c757d",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </form>
 
       {searchTerm && (
         <p style={{ marginBottom: "15px", color: "#666" }}>
-          Showing results for "{searchTerm}" - {pagination.totalItems} items
-          found
+          Showing results for "{searchTerm}" - {pagination.totalItems || 0} items found
         </p>
       )}
 
       {items.length === 0 ? (
         <p>No items found.</p>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {items.map((item) => (
-            <li
-              key={item.id}
-              style={{
-                padding: "10px",
-                border: "1px solid #eee",
-                marginBottom: "5px",
-                borderRadius: "4px",
-              }}
-            >
-              <Link to={"/items/" + item.id} style={{ textDecoration: "none" }}>
-                <strong>{item.name}</strong> - {item.category} - ${item.price}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div
+          style={{
+            height: "400px",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+          }}
+        >
+          <Virtuoso
+            style={{ height: "400px" }}
+            totalCount={items.length}
+            itemContent={(index) => {
+              const item = items[index];
+              return (
+                <div
+                  style={{
+                    padding: "10px",
+                    border: "1px solid #eee",
+                    margin: "5px 0",
+                    borderRadius: "4px",
+                    backgroundColor: "white",
+                  }}
+                >
+                  <Link to={`/items/${item.id}`} style={{ textDecoration: "none" }}>
+                    <strong>{item.name}</strong> - {item.category} - ${item.price}
+                  </Link>
+                </div>
+              );
+            }}
+          />
+        </div>
       )}
 
       {pagination.totalPages > 1 && (
@@ -130,8 +170,7 @@ function Items() {
           </button>
 
           <span style={{ margin: "0 15px", fontSize: "14px" }}>
-            Page {pagination.currentPage} of {pagination.totalPages}(
-            {pagination.totalItems} total items)
+            Page {pagination.currentPage || 1} of {pagination.totalPages || 1} ({pagination.totalItems || 0} total items)
           </span>
 
           <button

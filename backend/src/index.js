@@ -50,8 +50,7 @@ const startServer = (port) => {
     process.on('SIGINT', () => shutdownHandler('SIGINT'));
     process.on('SIGTERM', () => shutdownHandler('SIGTERM'));
     process.on('uncaughtException', (err) => {
-        console.error('Uncaught Exception:', err);
-        shutdownHandler('uncaughtException');
+        console.error("Uncaught Exception:", err);
     });
 };
 
