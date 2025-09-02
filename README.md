@@ -60,3 +60,6 @@ npm start
 ```
 
 > The frontend proxies `/api` requests to `http://localhost:4001`.
+
+Video demo here:
+https://www.loom.com/share/b3b74128805847f58b6f46196d74cbf8?sid=f26ad99c-4391-4a86-a328-7e1a1ed473d1
